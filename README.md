@@ -1,0 +1,1 @@
+# rami-virtual-competition-2022
