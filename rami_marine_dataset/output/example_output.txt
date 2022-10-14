@@ -1,0 +1,6 @@
+#timestamp   class   instance centroid_x  centroid_y [This line should not appear in your result]
+1639511685,1,red,150,200.
+
+In the following an example with some fields absent: [this line should not appear in your result]
+#timestamp   class   instance centroid_x  centroid_y [This line should not appear in your result]
+1639511685,5,,,.
