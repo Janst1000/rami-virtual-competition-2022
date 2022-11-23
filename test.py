@@ -1,15 +1,15 @@
 import cv2
 import os
 from pprint import pprint
-from cv2 import threshold
 import numpy as np
 import skimage.exposure
 from scnr import SCNR
 from matplotlib import pyplot as plt
+from argparse import ArgumentParser
 
-dataset = "./rami_marine_dataset/class_2/number_3"
-img_set = os.listdir(dataset)
-img_set.sort()
+#dataset = "./rami_marine_dataset/class_5/"
+#img_set = os.listdir(dataset)
+#img_set.sort()
 
 def remove_tint(img):
     # convert to HSV
@@ -77,7 +77,7 @@ def remove_green(img, percent = 0.5):
     lut = np.zeros((1,256), dtype=np.uint8)
     white = np.full((1,50), 255, dtype=np.uint8)
     lut[0:1, 35:85] = white
-    print(lut.shape, lut.dtype)
+    #print(lut.shape, lut.dtype)
 
     # apply lut to hue channel as mask
     mask = cv2.LUT(h, lut)
@@ -102,6 +102,13 @@ def auto_canny(image, sigma = 0.35):
     return edged
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--input", dest="input", help="input directory", required=True)
+    parser.add_argument("-o", "--output", dest="output", help="output directory", required=True)
+    dataset = parser.parse_args().input
+    output = parser.parse_args().output
+    img_set = os.listdir(dataset)
+    img_set.sort()
     fourcc = cv2.VideoWriter_fourcc('F', 'M', 'P', '4')
     out = cv2.VideoWriter('number3.avi',fourcc, 20, (1440, 405))
     for file in img_set:
@@ -144,7 +151,7 @@ if __name__ == "__main__":
         # save all frames as a video
         #hconcat_img = cv2.resize(hconcat_img, (720, 405))
         out.write(hconcat_img)
-        print(hconcat_img.shape)
+        cv2.imwrite(output + file, normed)
 
         key = cv2.waitKey(1)
         # 'q' to stop
