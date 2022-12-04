@@ -7,6 +7,8 @@ from scnr import SCNR
 from matplotlib import pyplot as plt
 from argparse import ArgumentParser
 
+import NumberDetection
+
 #dataset = "./rami_marine_dataset/class_5/"
 #img_set = os.listdir(dataset)
 #img_set.sort()
@@ -104,13 +106,15 @@ def auto_canny(image, sigma = 0.35):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-i", "--input", dest="input", help="input directory", required=True)
-    parser.add_argument("-o", "--output", dest="output", help="output directory", required=True)
+    parser.add_argument("-o", "--output", dest="output", help="output directory", required=False)
     dataset = parser.parse_args().input
     output = parser.parse_args().output
     img_set = os.listdir(dataset)
     img_set.sort()
     fourcc = cv2.VideoWriter_fourcc('F', 'M', 'P', '4')
-    out = cv2.VideoWriter('number3.avi',fourcc, 20, (1440, 405))
+    if output != None:
+        out = cv2.VideoWriter('numbers.avi',fourcc, 5, (720, 810))
+    numberDetector = NumberDetection.NumberDetector(weights="./models/numbersV2.pt", imgsz=640, half=True)
     for file in img_set:
         f = os.path.join(dataset, file)
         img = cv2.imread(f)
@@ -143,15 +147,22 @@ if __name__ == "__main__":
         
         # doing normalization
         normed = cv2.normalize(max_l_b, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        normed_bgr = cv2.cvtColor(normed, cv2.COLOR_GRAY2BGR)
+
+        detected, bounding_box = numberDetector.detect(weights = "./models/numbersV2.pt", img = normed_bgr)
+        print(bounding_box)
+        detected = cv2.resize(detected, (720, 405))
         
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        hconcat_img = concat_images(img, normed)
+        hconcat_img = concat_images(img, detected)
+        vconcat_img = concat_images(img, detected)
         cv2.imshow("original", hconcat_img)
         
         # save all frames as a video
         #hconcat_img = cv2.resize(hconcat_img, (720, 405))
-        out.write(hconcat_img)
-        cv2.imwrite(output + file, normed)
+        if output != None:
+            out.write(vconcat_img)
+        #    cv2.imwrite(output + file, detected)
 
         key = cv2.waitKey(1)
         # 'q' to stop
