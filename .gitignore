@@ -130,3 +130,8 @@ dmypy.json
 
 # Ignoring yolov7
 yolov7/
+rami-marine-dataset/
+sea-thru/
+output/
+
+traced_model.pt
