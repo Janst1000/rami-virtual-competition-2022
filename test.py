@@ -7,7 +7,7 @@ from scnr import SCNR
 from matplotlib import pyplot as plt
 from argparse import ArgumentParser
 
-import NumberDetection
+import Detection
 
 #dataset = "./rami_marine_dataset/class_5/"
 #img_set = os.listdir(dataset)
@@ -113,8 +113,22 @@ if __name__ == "__main__":
     img_set.sort()
     fourcc = cv2.VideoWriter_fourcc('F', 'M', 'P', '4')
     if output != None:
-        out = cv2.VideoWriter('numbers.avi',fourcc, 5, (720, 810))
-    numberDetector = NumberDetection.NumberDetector(weights="./models/numbersV2.pt", imgsz=640, half=True)
+        out = cv2.VideoWriter('numbers.avi',fourcc, 5, (1440, 405))
+    numberDetector = Detection.Detector(weights="./models/numbersV2.pt", imgsz=640, half=True, device="cuda")
+    ballDetector = Detection.Detector(weights="./models/ballsV1.pt", imgsz=640, half=True, device="cuda")
+
+    # clear output file
+    with open("output.txt", "w") as f:
+        f.write("")
+    
+    # remove everything that isn't a jpg or png
+    img_set = [x for x in img_set if x.endswith(".png")]
+    # create key_list
+    key_list = []
+    for file in img_set:
+        key_list.append(int(file.split(".")[0]))
+    key_list.sort()
+    img_set = [str(x) + ".png" for x in key_list]
     for file in img_set:
         f = os.path.join(dataset, file)
         img = cv2.imread(f)
@@ -149,8 +163,32 @@ if __name__ == "__main__":
         normed = cv2.normalize(max_l_b, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         normed_bgr = cv2.cvtColor(normed, cv2.COLOR_GRAY2BGR)
 
-        detected, bounding_box = numberDetector.detect(weights = "./models/numbersV2.pt", img = normed_bgr)
-        print(bounding_box)
+        detected, bounding_box = numberDetector.detect(img = normed_bgr, show_all=False, conf_thres=0.75)
+        if bounding_box == None:
+            detected, bounding_box = ballDetector.detect(img = img, show_all=False)
+            if bounding_box == None:
+                print("No ball detected")
+                with open("output.txt", "a") as f:
+                    f.write("\n")
+            else:
+                ball, x, y, w, h, cls = bounding_box
+                centroid = (x, y)
+                cv2.circle(detected, centroid, 5, (0, 0, 255), -1)
+                print("Ball detected: ", ball, x, y, w, h, cls)
+                with open("output.txt", "a") as f:
+                    color = ball.split("_")[1]
+                    f.write(color + "\n")
+
+        else:
+            #print(bounding_box)
+            number, x, y, w, h, cls = bounding_box
+            centroid = (x, y)
+            #print("Number detected: ", number, "Centriod: ", centroid)
+            cv2.circle(detected, centroid, 5, (0, 0, 255), -1)
+            print("Number detected: ", number, x, y, w, h, cls)
+            with open("output.txt", "a") as f:
+                number = number.split("_")[1]
+                f.write("number_" + number + "\n")
         detected = cv2.resize(detected, (720, 405))
         
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -169,7 +207,19 @@ if __name__ == "__main__":
         if key == ord('q'):
             out.release()
             break
-        # Print key 
+        # Print key
         elif key != -1:
             print(key)
     #out.release()
+    # calculate accuracy
+    with open("output.txt", "r") as f:
+        preds = f.readlines()
+    with open(dataset + "/ground_truth.txt", "r") as f:
+        ground_truth = f.readlines()
+    correct = 0
+    total = len(ground_truth)
+    for i in range(len(preds)):
+        if preds[i] == ground_truth[i]:
+            correct += 1
+    accuracy = correct / total
+    print("Accuracy: ", accuracy)
