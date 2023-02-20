@@ -13,6 +13,11 @@ import Detection
 #img_set = os.listdir(dataset)
 #img_set.sort()
 
+
+"""
+    This function was found here https://stackoverflow.com/questions/70876252/how-to-do-color-cast-removal-or-color-coverage-in-python
+    it works pretty good but we modified it to stretch the dynamic range at the end
+"""
 def remove_tint(img):
     # convert to HSV
     hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -64,6 +69,9 @@ def process_image(image, contrast=False):
     #gray = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     return thresh
 
+""" 
+    This function was found herehttps://stackoverflow.com/questions/64762020/how-to-desaturate-one-color-in-an-image-using-opencv2-in-python
+"""
 def remove_green(img, percent = 0.5):
         # convert to HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -106,16 +114,16 @@ def auto_canny(image, sigma = 0.35):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-i", "--input", dest="input", help="input directory", required=True)
-    parser.add_argument("-o", "--output", dest="output", help="output directory", required=False)
+    parser.add_argument("-o", "--output", dest="output", help="create output video", required=False)
     dataset = parser.parse_args().input
     output = parser.parse_args().output
     img_set = os.listdir(dataset)
     img_set.sort()
     fourcc = cv2.VideoWriter_fourcc('F', 'M', 'P', '4')
     if output != None:
-        out = cv2.VideoWriter('numbers.avi',fourcc, 5, (1440, 405))
-    numberDetector = Detection.Detector(weights="./models/numbersV2.pt", imgsz=640, half=True, device="cuda")
-    ballDetector = Detection.Detector(weights="./models/ballsV1.pt", imgsz=640, half=True, device="cuda")
+        out = cv2.VideoWriter('example.avi',fourcc, 5, (1440, 405))
+    numberDetector = Detection.Detector(weights="./models/numbersV2.pt", imgsz=640, half=False, device="cuda")
+    ballDetector = Detection.Detector(weights="./models/ballsV1.pt", imgsz=640, half=False, device="cuda")
 
     # clear output file
     with open("output.txt", "w") as f:

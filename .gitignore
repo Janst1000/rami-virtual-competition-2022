@@ -133,5 +133,5 @@ yolov7/
 rami-marine-dataset/
 sea-thru/
 output/
-
+frames/
 traced_model.pt
