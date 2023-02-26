@@ -114,13 +114,17 @@ def auto_canny(image, sigma = 0.35):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-i", "--input", dest="input", help="input directory", required=True)
-    parser.add_argument("-o", "--output", dest="output", help="create output video", required=False)
+    parser.add_argument("-o", "--output", dest="output", help="create output video", required=False, action="store_true")
+    parser.add_argument("-gt", "--ground_truth", dest="ground_truth", help="ground truth file", required=False, default="ground_truth.txt", action="store_true")
+    parser.add_argument("--show", dest="show", help="show images", required=False, action="store_true")
     dataset = parser.parse_args().input
     output = parser.parse_args().output
+    ground_truth = parser.parse_args().ground_truth
+    show_img = parser.parse_args().show
     img_set = os.listdir(dataset)
     img_set.sort()
     fourcc = cv2.VideoWriter_fourcc('F', 'M', 'P', '4')
-    if output != None:
+    if output == True:
         out = cv2.VideoWriter('example.avi',fourcc, 5, (1440, 405))
     numberDetector = Detection.Detector(weights="./models/numbersV2.pt", imgsz=640, half=False, device="cuda")
     ballDetector = Detection.Detector(weights="./models/ballsV1.pt", imgsz=640, half=False, device="cuda")
@@ -202,32 +206,31 @@ if __name__ == "__main__":
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         hconcat_img = concat_images(img, detected)
         vconcat_img = concat_images(img, detected)
-        cv2.imshow("original", hconcat_img)
-        
-        # save all frames as a video
-        #hconcat_img = cv2.resize(hconcat_img, (720, 405))
-        if output != None:
-            out.write(vconcat_img)
-        #    cv2.imwrite(output + file, detected)
+        if show_img == True:
+            cv2.imshow("original", hconcat_img)        
 
-        key = cv2.waitKey(1)
-        # 'q' to stop
-        if key == ord('q'):
-            out.release()
-            break
-        # Print key
-        elif key != -1:
-            print(key)
-    #out.release()
+            key = cv2.waitKey(1)
+            # 'q' to stop
+            if key == ord('q'):
+                out.release()
+                break
+            # Print key
+            elif key != -1:
+                print(key)
+
+        # save all frames as a video 
+        if output == True:
+            out.write(vconcat_img)
     # calculate accuracy
-    with open("output.txt", "r") as f:
-        preds = f.readlines()
-    with open(dataset + "/ground_truth.txt", "r") as f:
-        ground_truth = f.readlines()
-    correct = 0
-    total = len(ground_truth)
-    for i in range(len(preds)):
-        if preds[i] == ground_truth[i]:
-            correct += 1
-    accuracy = correct / total
-    print("Accuracy: ", accuracy)
+    if ground_truth == True:
+        with open("output.txt", "r") as f:
+            preds = f.readlines()
+        with open(dataset + "/ground_truth.txt", "r") as f:
+            ground_truth = f.readlines()
+        correct = 0
+        total = len(ground_truth)
+        for i in range(len(preds)):
+            if preds[i] == ground_truth[i]:
+                correct += 1
+        accuracy = correct / total
+        print("Accuracy: ", accuracy)
