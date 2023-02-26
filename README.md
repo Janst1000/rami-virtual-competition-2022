@@ -1,11 +1,40 @@
 # rami-virtual-competition-2022
 
-## Setup of Conda Environment TODO
+This repository is using yolo-v7 models and image transformations to predict buoys and numbers on pipes in marine robotics datasets. The dataset that we used was from the rami virtual competition in 2022. Unfortunatly we are not able to predict all classes that were featured in the dataset yet but we can predict the numbers and buoys from class 1 and class 2. some of the other classes could be implemented this way in the future however class 3 images cannot be implemented this way as we do not have enough training data.
+
+## Setup of Conda Environment
 
 ```
 conda create -n rami --file env.yml
 conda activate rami
 pip install -r requirements.txt
+```
+
+## Usage
+
+Since this project was based on the rami-virtual-competition in 2022 we used their dataset which all came as seperate images to detect object on. However this code could be modified in the future to take the input stream from a camera or ros camera topic.
+
+To run the script with a custom dataset, you will have to adjust a few things. We need a ``ground_truth.txt`` file in the same directory that has our input images. In this file we put the expected class on each row. To see how it is supposed to look like you can find an example one in ``rami_marine_dataset/test/ground_truth.txt``
+
+To run the script run the following:
+
+```
+python3 test.py -i <input-dir> -gt
+```
+
+The following flags can be given to the script
+
+```
+-i	input directory (required)
+-o	should and output video be created
+-gt	a ground_truth.txt is in the input dir and we will calculate the accuracy of our predictions
+--show	shows the resulting image with prediction
+```
+
+So for a usual run of our example that produced the output below we would run:
+
+```
+python3 test.py -i rami_marine_dataset/test -gt --show
 ```
 
 ## How does it work?
